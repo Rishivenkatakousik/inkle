@@ -1,13 +1,25 @@
 @import "tailwindcss";
 
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* next/font will populate --font-inter when you used variable: '--font-inter' */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-grey-primary: #706A85;
+  --color-purple-brand: #5622FF;
+  --color-red-light: #FCF2F3;
+  --color-red-dark: #BF1A2F;
+  --color-blue-light: #EBF5FB;
+  --color-blue-dark: #2D7BB9;
+  --color-black-soft: #41395C;
+  --color-purple-deep: #110733;
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -19,8 +31,22 @@
   }
 }
 
+html, body {
+  font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
+import Providers from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,6 +12,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin"],
+  variable: "--font-be-vietnam-pro",
+  display: "swap",
+  weight: ["400", "500", "600", "700"], 
 });
 
 export const metadata: Metadata = {
@@ -24,10 +33,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${beVietnamPro.className} ${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
