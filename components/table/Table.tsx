@@ -13,9 +13,11 @@ import { fetchCountries, fetchTableData } from "@/lib/api";
 import { TableRow } from "@/types/table";
 import { columns as columnFactory } from "./columns";
 import LoadingSpinner from "../loading";
+import EditCustomerModal from "../modal/EditCustomerModal";
 
 export default function Table() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -44,8 +46,9 @@ export default function Table() {
     () =>
       columnFactory({
         onToggleFilter: () => setOpen((prev) => !prev),
+        setSelectedId, // pass setSelectedId here
       }),
-    []
+    [setSelectedId]
   );
 
   const table = useReactTable({
@@ -95,7 +98,7 @@ export default function Table() {
       {open && (
         <div
           ref={dropdownRef}
-          className="absolute top-12 right-56 z-50 w-52 bg-white rounded-md shadow-md border border-gray-300 p-4"
+          className="absolute top-12 right-62 z-50 w-52 bg-white rounded-md shadow-md border border-gray-300 p-4"
         >
           <div className="max-h-32 overflow-y-auto space-y-4 scrollbar-hide">
             {countries.map((country) => {
@@ -156,6 +159,15 @@ export default function Table() {
           ))}
         </tbody>
       </table>
+
+      {selectedId && (
+  <EditCustomerModal
+    id={selectedId}
+    open={!!selectedId}
+    onClose={() => setSelectedId(null)}
+  />
+)}
+
     </div>
   );
 }

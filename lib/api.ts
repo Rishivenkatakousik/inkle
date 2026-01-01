@@ -10,10 +10,28 @@ export async function fetchTableData(): Promise<TableRow[]> {
   return res.json();
 }
 
-export async function fetchCountries(): Promise<{ name: string; id: string }[]> {
-  const res = await fetch("https://685013d7e7c42cfd17974a33.mockapi.io/countries");
+export async function fetchCountries(): Promise<
+  { name: string; id: string }[]
+> {
+  const res = await fetch(
+    "https://685013d7e7c42cfd17974a33.mockapi.io/countries"
+  );
   if (!res.ok) {
     throw new Error("Failed to fetch countries");
   }
+  return res.json();
+}
+
+export async function fetchCustomerById(
+  id: string
+): Promise<TableRow & { name?: string }> {
+  const res = await fetch(
+    `https://685013d7e7c42cfd17974a33.mockapi.io/taxes/${id}`
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch customer");
+  }
+
   return res.json();
 }

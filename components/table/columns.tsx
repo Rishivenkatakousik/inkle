@@ -8,7 +8,13 @@ import { LuFilter } from "react-icons/lu";
 
 const columnHelper = createColumnHelper<TableRow>();
 
-export const columns = ({ onToggleFilter }: { onToggleFilter: () => void }) => [
+export const columns = ({
+  onToggleFilter,
+  setSelectedId,
+}: {
+  onToggleFilter: () => void;
+  setSelectedId: (id: string) => void;
+}) => [
   columnHelper.accessor("entity", {
     header: "Entity",
     cell: (info) => (
@@ -70,8 +76,8 @@ export const columns = ({ onToggleFilter }: { onToggleFilter: () => void }) => [
   columnHelper.display({
     id: "actions",
     header: "",
-    cell: () => (
-      <button>
+    cell: (info) => (
+      <button onClick={() => setSelectedId(info.row.original.id)}>
         <FiEdit className="h-4 w-4 text-grey-primary font-extrabold cursor-pointer" />
       </button>
     ),
