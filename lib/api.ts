@@ -35,3 +35,25 @@ export async function fetchCustomerById(
 
   return res.json();
 }
+
+export async function updateCustomer(
+  id: string,
+  data: { name: string; country: string; countryId: string }
+): Promise<TableRow> {
+  const res = await fetch(
+    `https://685013d7e7c42cfd17974a33.mockapi.io/taxes/${id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to update customer");
+  }
+
+  return res.json();
+}

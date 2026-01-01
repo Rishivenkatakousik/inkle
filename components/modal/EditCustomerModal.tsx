@@ -1,10 +1,11 @@
 "use client"
 
 import React, { useEffect, useState, useRef } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { fetchCustomerById, fetchCountries } from "@/lib/api"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { fetchCustomerById, fetchCountries, updateCustomer } from "@/lib/api"
+import { TableRow } from "@/types/table"
 import { IoMdClose } from "react-icons/io"
-import { LuPencil, LuChevronDown } from "react-icons/lu"
+import { LuPencil } from "react-icons/lu"
 import { FaMapMarkerAlt } from "react-icons/fa"
 
 interface Props {
@@ -20,6 +21,8 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
   const [error, setError] = useState("")
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const queryClient = useQueryClient()
+
   const { data, isLoading } = useQuery({
     queryKey: ["customer", id],
     queryFn: () => fetchCustomerById(id),
@@ -34,6 +37,39 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
     queryKey: ["countries"],
     queryFn: fetchCountries,
     enabled: open,
+  })
+
+  // Mutation for updating customer
+  const { mutate, isPending: isSaving } = useMutation({
+    mutationFn: (updateData: { name: string; country: string; countryId: string }) =>
+      updateCustomer(id, updateData),
+    onSuccess: (updatedCustomer) => {
+      // 1. Update the individual customer cache
+      queryClient.setQueryData(["customer", id], updatedCustomer)
+
+      // 2. Update the table data cache directly for instant UI update
+      queryClient.setQueryData<TableRow[]>(["table-data"], (oldData) => {
+        if (!oldData) return oldData
+        return oldData.map((row) =>
+          row.id === id
+            ? {
+                ...row,
+                name: updatedCustomer.name,
+                country: updatedCustomer.country,
+              }
+            : row
+        )
+      })
+
+      // 3. Invalidate to refetch in background (ensures data consistency)
+      queryClient.invalidateQueries({ queryKey: ["table-data"] })
+
+      // 4. Close modal
+      onClose()
+    },
+    onError: (err: Error) => {
+      setError(err.message || "Failed to save changes")
+    },
   })
 
   useEffect(() => {
@@ -62,13 +98,6 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
 
   if (!open) return null
 
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedName = e.target.value
-    setCountryName(selectedName)
-    const found = countries.find((c: { name: string }) => c.name === selectedName)
-    setCountryId(found ? found.id : "")
-  }
-
   const handleCountrySelect = (countryItem: { name: string; id: string }) => {
     setCountryName(countryItem.name)
     setCountryId(countryItem.id)
@@ -81,9 +110,13 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
       return
     }
     setError("")
-    // TODO: Submit logic here (e.g., call an API to update the customer)
-    console.log("Saved:", { id, name, countryName, countryId })
-    onClose()
+    
+    // Call the mutation
+    mutate({
+      name,
+      country: countryName,
+      countryId,
+    })
   }
 
   return (
@@ -94,7 +127,7 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
           <h2 className="font-semibold text-[20px] tracking-[0.15px] text-purple-deep">
             Edit Customer
           </h2>
-          <button onClick={onClose} className="p-1 rounded-full transition-colors">
+          <button onClick={onClose} className="p-1 rounded-full transition-colors" disabled={isSaving}>
             <IoMdClose className="h-6 w-6 text-grey-primary cursor-pointer" />
           </button>
         </div>
@@ -111,14 +144,15 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
             <>
               {/* Name */}
               <div className="space-y-1.5">
-                <label className="block text-[15px]  text-grey-primary">
+                <label className="block text-[15px] text-grey-primary">
                   Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className={`w-full rounded h-10 bg-[#FAFAFB] border-2 ${error ? "border-red-400" : "border-[#F3F3F5]"} px-4 py-3 text-base text-purple-deep focus:outline-none  focus:border-purple-brand transition-all`}
+                  disabled={isSaving}
+                  className={`w-full rounded h-10 bg-[#FAFAFB] border-2 ${error ? "border-red-400" : "border-[#F3F3F5]"} px-4 py-3 text-base text-purple-deep focus:outline-none focus:border-purple-brand transition-all disabled:opacity-50`}
                 />
                 {error && (
                   <div className="text-red-500 text-xs">{error}</div>
@@ -131,11 +165,11 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     type="button"
-                    className={`w-full flex items-center justify-between rounded border-2 ${dropdownOpen ? "border-purple-brand" : "border-[#F3F3F5]"} bg-[#FAFAFB] pt-[10px] pr-[12px] pb-[10px] pl-[12px] text-base text-purple-deep focus:outline-none transition-all`}
-                    onClick={() => setDropdownOpen((open) => !open)}
+                    disabled={isSaving}
+                    className={`w-full flex items-center justify-between rounded border-2 ${dropdownOpen ? "border-purple-brand" : "border-[#F3F3F5]"} bg-[#FAFAFB] pt-[10px] pr-[12px] pb-[10px] pl-[12px] text-base text-purple-deep focus:outline-none transition-all disabled:opacity-50`}
+                    onClick={() => setDropdownOpen((o) => !o)}
                   >
                     <span className="flex items-center gap-2">
-                      <FaMapMarkerAlt className="text-[#8e8cb2]" />
                       {countryName || <span className="text-gray-400">Select country</span>}
                     </span>
                     <svg className={`w-5 h-5 text-gray-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +177,7 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
                     </svg>
                   </button>
                   {dropdownOpen && (
-                    <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow-sm max-h-40 overflow-y-auto scrollbar-hide">
+                    <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto scrollbar-hide">
                       {countries.length > 0 ? (
                         countries.map((countryItem: { name: string; id: string }) => (
                           <div
@@ -152,8 +186,8 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
                             onClick={() => handleCountrySelect(countryItem)}
                           >
                             <span className="flex items-center gap-2">
-                              <FaMapMarkerAlt className="text-[#8e8cb2]" />
-                              <span className=" text-purple-deep">{countryItem.name}</span>
+                              <FaMapMarkerAlt className="text-grey-primary/50" />
+                              <span className="text-purple-deep">{countryItem.name}</span>
                             </span>
                             <LuPencil className="h-4 w-4 text-purple-brand" />
                           </div>
@@ -173,15 +207,20 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
         <div className="flex h-20 justify-end gap-3 py-4 px-6 border-t border-gray-100">
           <button
             onClick={onClose}
-            className="px-4 py-3 h-11 text-[14px]  rounded-sm border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+            disabled={isSaving}
+            className="px-4 py-3 h-11 text-[14px] rounded-sm border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-3 h-11 text-[14px]  rounded-sm bg-purple-brand text-white cursor-pointer hover:bg-[#5219cc] shadow-sm transition-all active:scale-[0.98]"
+            disabled={isSaving}
+            className="px-4 py-3 h-11 text-[14px] rounded-sm bg-purple-brand text-white cursor-pointer hover:bg-[#5219cc] shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Save
+            {isSaving && (
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+            )}
+            {isSaving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
