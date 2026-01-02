@@ -21,6 +21,7 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
   const [error, setError] = useState("")
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -81,6 +82,7 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
     }
   }, [countries, countryName, countryId])
 
+  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -90,6 +92,17 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape" && !isSaving) {
+        onClose()
+      }
+    }
+    document.addEventListener("keydown", handleEscape)
+    return () => document.removeEventListener("keydown", handleEscape)
+  }, [onClose, isSaving])
 
   if (!open) return null
 
@@ -113,9 +126,22 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
     })
   }
 
+  // Handle backdrop click
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node) && !isSaving) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-xl h-[490px] bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        ref={modalRef}
+        className="w-full max-w-xl h-[490px] bg-white rounded-lg shadow-lg overflow-hidden flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between h-[56px] w-full pt-4 pr-4 pb-4 pl-8 border-b border-gray-100">
           <h2 className="font-semibold text-[20px] tracking-[0.15px] text-purple-deep">
