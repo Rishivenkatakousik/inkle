@@ -30,7 +30,7 @@ export default function TableClient({ initialData, countries }: TableClientProps
     queryKey: ["table-data"],
     queryFn: fetchTableData,
     initialData: initialData,
-    staleTime: 0, // Always check for updates
+    staleTime: 0, 
   });
 
   const columns = useMemo(

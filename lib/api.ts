@@ -24,7 +24,7 @@ export async function fetchCountries(): Promise<
 
 export async function fetchCustomerById(
   id: string
-): Promise<TableRow & { name?: string }> {
+): Promise<TableRow> {
   const res = await fetch(
     `https://685013d7e7c42cfd17974a33.mockapi.io/taxes/${id}`
   );

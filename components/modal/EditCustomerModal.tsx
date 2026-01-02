@@ -44,10 +44,8 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
     mutationFn: (updateData: { name: string; country: string; countryId: string }) =>
       updateCustomer(id, updateData),
     onSuccess: (updatedCustomer) => {
-      // 1. Update the individual customer cache
       queryClient.setQueryData(["customer", id], updatedCustomer)
 
-      // 2. Update the table data cache directly for instant UI update
       queryClient.setQueryData<TableRow[]>(["table-data"], (oldData) => {
         if (!oldData) return oldData
         return oldData.map((row) =>
@@ -61,10 +59,8 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
         )
       })
 
-      // 3. Invalidate to refetch in background (ensures data consistency)
       queryClient.invalidateQueries({ queryKey: ["table-data"] })
 
-      // 4. Close modal
       onClose()
     },
     onError: (err: Error) => {
@@ -78,7 +74,6 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
     if (data?.id) setCountryId(data.id)
   }, [data])
 
-  // When countries are loaded, set countryId if missing
   useEffect(() => {
     if (countries.length > 0 && countryName && !countryId) {
       const found = countries.find((c: { name: string }) => c.name === countryName)
@@ -111,7 +106,6 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
     }
     setError("")
     
-    // Call the mutation
     mutate({
       name,
       country: countryName,
@@ -172,9 +166,12 @@ export default function EditCustomerModal({ id, open, onClose }: Props) {
                     <span className="flex items-center gap-2">
                       {countryName || <span className="text-gray-400">Select country</span>}
                     </span>
-                    <svg className={`w-5 h-5 text-gray-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="flex gap-2 items-center">
+                      <LuPencil className={`h-4 w-4 text-grey-primary ${dropdownOpen ? "hidden":""}`} />
+                      <svg className={`w-5 h-5 text-gray-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
+                    </span>
                   </button>
                   {dropdownOpen && (
                     <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto scrollbar-hide">

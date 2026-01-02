@@ -1,7 +1,6 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { TableRow } from "@/types/table";
 import { formatDate } from "@/lib/date";
-import { CiFilter } from "react-icons/ci";
 import { FiEdit } from "react-icons/fi";
 import { LuFilter } from "react-icons/lu";
 
